@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum CourseRole {
+  student
+  teacher
+}
+
+enum ModuleType {
+  definition
+  explanation
+  example
+  problem
+  notes
+  other
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String          @unique
+  email         String?         @unique
+  createdAt     DateTime        @default(now())
+
+  courses       Course[]        @relation("CourseCreator")
+  modules       Module[]        @relation("ModuleCreator")
+  versions      ModuleVersion[] @relation("VersionCreator")
+  compilations  Compilation[]   @relation("CompilationCreator")
+  memberships   CourseMember[]
+}
+
+model Course {
+  id           String        @id @default(cuid())
+  name         String
+  code         String        @unique
+  description  String?
+  createdAt    DateTime      @default(now())
+  createdById  String
+
+  createdBy    User          @relation("CourseCreator", fields: [createdById], references: [id])
+  members      CourseMember[]
+  modules      Module[]
+  compilations Compilation[]
+}
+
+model CourseMember {
+  id       String     @id @default(cuid())
+  courseId String
+  userId   String
+  role     CourseRole @default(student)
+
+  course   Course     @relation(fields: [courseId], references: [id])
+  user     User       @relation(fields: [userId], references: [id])
+
+  @@unique([courseId, userId])
+}
+
+model Module {
+  id               String         @id @default(cuid())
+  courseId         String
+  title            String
+  type             ModuleType
+  createdById      String
+  currentVersionId String?        @unique
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  course           Course         @relation(fields: [courseId], references: [id])
+  createdBy        User           @relation("ModuleCreator", fields: [createdById], references: [id])
+  versions         ModuleVersion[]
+  currentVersion   ModuleVersion? @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  tags             ModuleTag[]
+}
+
+model ModuleVersion {
+  id              String    @id @default(cuid())
+  moduleId        String
+  versionNumber   Int
+  contentMarkdown String
+  createdById     String
+  createdAt       DateTime  @default(now())
+
+  module          Module    @relation(fields: [moduleId], references: [id])
+  createdBy       User      @relation("VersionCreator", fields: [createdById], references: [id])
+  currentOf       Module?   @relation("CurrentVersion")
+
+  @@unique([moduleId, versionNumber])
+}
+
+model ModuleTag {
+  id       String @id @default(cuid())
+  moduleId String
+  value    String
+
+  module   Module @relation(fields: [moduleId], references: [id])
+
+  @@index([value])
+}
+
+model Compilation {
+  id          String   @id @default(cuid())
+  courseId    String
+  name        String
+  description String?
+  moduleOrder Json
+  createdById String
+  createdAt   DateTime @default(now())
+
+  course      Course   @relation(fields: [courseId], references: [id])
+  createdBy   User     @relation("CompilationCreator", fields: [createdById], references: [id])
+}
