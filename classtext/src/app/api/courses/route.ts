@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { course: { createdAt: "desc" } },
     });
 
     return NextResponse.json(

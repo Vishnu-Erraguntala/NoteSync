@@ -1,94 +1,94 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
-import { useUser } from "@/components/providers/user-provider";
+import Link from "next/link";
 
 const features = [
-  "Write modular Markdown definitions, examples, and problems",
-  "Track every revision with instant version history",
-  "Reference other modules using @module shortcuts",
-  "Compile a polished HTML + PDF textbook with a single click",
+  {
+    title: "Modular Knowledge",
+    description: "Break down complex topics into digestible modules - definitions, examples, problems, and explanations.",
+    icon: "📚",
+  },
+  {
+    title: "Version Control",
+    description: "Track every change with built-in version history. View diffs, restore previous versions, and see who contributed what.",
+    icon: "🔄",
+  },
+  {
+    title: "Smart References",
+    description: "Link modules together with @module syntax. References automatically resolve in your compiled textbook.",
+    icon: "🔗",
+  },
+  {
+    title: "One-Click Publishing",
+    description: "Compile your modules into beautiful HTML or PDF textbooks with table of contents and cross-references.",
+    icon: "📖",
+  },
 ];
 
 export default function Home() {
   const router = useRouter();
-  const { username, setUsername } = useUser();
-  const [name, setName] = useState(username ?? "");
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setLoading(true);
-    setUsername(trimmed);
-    router.push("/courses");
-  };
+  useEffect(() => {
+    // Check if user is already logged in
+    fetch("/api/auth/me")
+      .then((res) => {
+        if (res.ok) {
+          router.push("/courses");
+        }
+      })
+      .catch(() => {
+        // Not logged in, stay on home page
+      });
+  }, [router]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-4xl space-y-10 rounded-3xl bg-white p-10 shadow-xl">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand-600">
-            NoteSync
-          </p>
-          <h1 className="text-4xl font-bold text-slate-900">
-            The collaborative textbook built by your class.
-          </h1>
-          <p className="text-lg text-slate-600">
-            High school students can draft modules, review previous versions,
-            and compile a beautiful course reader without needing any extra
-            tools. No AI shortcuts—just thoughtful writing together.
-          </p>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-[2fr,1fr]">
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-6 shadow-inner"
-          >
-            <label className="text-sm font-medium text-slate-700">
-              Enter a display name to get started
-            </label>
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
-                placeholder="e.g. Maya P. or Coach Lopez"
-              />
-              <button
-                type="submit"
-                disabled={loading || !name.trim()}
-                className="btn-primary min-w-[180px]"
-              >
-                {loading ? "Loading..." : "Enter NoteSync"}
-              </button>
-            </div>
-            {username && (
-              <button
-                type="button"
-                className="mt-4 text-sm font-medium text-brand-600 underline"
-                onClick={() => router.push("/courses")}
-              >
-                Continue as {username}
-              </button>
-            )}
-          </form>
-
-          <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Why NoteSync?
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Hero Section */}
+      <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-6xl">
+          <div className="text-center mb-16">
+            <h1 className="text-6xl font-bold text-slate-900 mb-4">
+              NoteSync
+            </h1>
+            <p className="text-2xl text-slate-600 mb-8">
+              The collaborative textbook built by your class
             </p>
-            <ul className="mt-4 space-y-3 text-sm text-slate-700">
-              {features.map((item) => (
-                <li key={item} className="flex items-start gap-2">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-brand-500" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            <p className="text-lg text-slate-500 max-w-2xl mx-auto mb-12">
+              Students can draft modules, review previous versions, and compile beautiful course readers. 
+              No AI shortcuts—just thoughtful writing together.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Link
+                href="/signup"
+                className="rounded-lg bg-indigo-600 px-8 py-3 font-medium text-white hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl"
+              >
+                Get Started
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-lg bg-white px-8 py-3 font-medium text-slate-900 hover:bg-slate-50 transition-colors shadow-lg hover:shadow-xl border border-slate-200"
+              >
+                Sign In
+              </Link>
+            </div>
+          </div>
+
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-2 gap-6 mt-16">
+            {features.map((feature) => (
+              <div
+                key={feature.title}
+                className="rounded-2xl bg-white p-8 shadow-xl hover:shadow-2xl transition-shadow"
+              >
+                <div className="text-4xl mb-4">{feature.icon}</div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-slate-600">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

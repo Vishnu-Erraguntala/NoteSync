@@ -1,31 +1,33 @@
 import { NextRequest } from "next/server";
 import { prisma } from "./prisma";
 
-export const USER_HEADER = "x-user-name";
-
-export async function upsertUserByName(name: string) {
-  const trimmed = name.trim();
-  if (!trimmed) {
-    throw new Error("A username is required.");
+export async function requireRequestUser(request: NextRequest) {
+  const userId = request.cookies.get("user_id")?.value;
+  
+  if (!userId) {
+    throw new Error("Not authenticated");
   }
 
-  const capped = trimmed.slice(0, 60);
-  return prisma.user.upsert({
-    where: { name: capped },
-    update: {},
-    create: {
-      name: capped,
-    },
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
   });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  return user;
 }
 
-export async function requireRequestUser(request: NextRequest) {
-  const supplied =
-    request.headers.get(USER_HEADER) ??
-    request.nextUrl.searchParams.get("username");
-  if (!supplied) {
-    throw new Error("Username header missing");
+export async function getRequestUser(request: NextRequest) {
+  const userId = request.cookies.get("user_id")?.value;
+  
+  if (!userId) {
+    return null;
   }
-  return upsertUserByName(supplied);
+
+  return prisma.user.findUnique({
+    where: { id: userId },
+  });
 }
 
